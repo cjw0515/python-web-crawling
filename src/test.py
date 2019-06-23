@@ -49,3 +49,4 @@ for tag in result:
 # for item in movies:
 #     print(item)
 
+print(__name__)
