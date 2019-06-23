@@ -14,4 +14,13 @@ if __name__ == "__main__":
     # print(response.text)
     driver = webdriver.Chrome()
     driver.implicitly_wait(3)
-    driver.get('https://google.com')
+    driver.get('http://www.1300k.com/shop/best/best.html?f_bid=HD4001')
+    html = driver.page_source
+    soup = BeautifulSoup(html, 'html.parser')
+    brand_name = soup.select('.bst .a_bname')
+    item_name = soup.select('.bst .a_gname')
+    for item in brand_name:
+        print(item.text)
+
+    for item in item_name:
+        print(item.text)
