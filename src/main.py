@@ -1,7 +1,7 @@
 import sys
 import htmlcrawler
 import sqlite_db
-
+import bestitem_1300k
 
 def main():
     with sqlite_db.SqliteDatabase('test.db') as db:
@@ -27,6 +27,8 @@ def main():
         """
         db.execute(create_table_sql)
 
+item = bestitem_1300k.BestItem(124)
+print(item.category)
 
 
 if __name__ == "__main__":
