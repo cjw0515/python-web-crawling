@@ -18,6 +18,12 @@ class SqliteDatabase:
     def execute(self, sql, params=None):
         self._cursor.execute(sql, params or ())
 
+    def execute_many(self, sql, params=None):
+        self._cursor.executemany(sql, params)
+
+    def execute_script(self, script):
+        self._cursor.executescript(script)
+
     def fetch_all(self):
         return self._cursor.fetchall()
 
