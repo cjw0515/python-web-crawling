@@ -1,34 +1,12 @@
-import sys
 import htmlcrawler
 import sqlite_db
 import bestitem_1300k
 
-def main():
-    with sqlite_db.SqliteDatabase('test.db') as db:
-        # db.execute('CREATE TABLE comments(pkey INTEGER PRIMARY KEY AUTOINCREMENT, username VARCHAR, comment_body VARCHAR, date_posted TIMESTAMP)')
-        # db.execute('INSERT INTO comments (username, comment_body, date_posted) VALUES (?, ?, current_date)',
-        #            ('tom', 'this is a comment'))
-        # comments = db.query('SELECT * FROM comments')
-        # print(comments)
-        create_table_sql = """
-        create table if not exists best100_1300k(
-            "Idx"	INTEGER PRIMARY KEY AUTOINCREMENT,
-            "Category"	TEXT,
-            "Rank"	INTEGER,
-            "ImageURL"	TEXT,
-            "ItemCode"	INTEGER,
-            "Brand"	TEXT,
-            "ItemName"	TEXT,
-            "Price"	INTEGER,
-            "SalePrice"	INTEGER,
-            "NumOfReview"	INTEGER,
-            "NumOfLike"	INTEGER
-        )
-        """
-        db.execute(create_table_sql)
 
-item = bestitem_1300k.BestItem(124)
-print(item.category)
+def main():
+    html = htmlcrawler.get_html('http://www.1300k.com/shop/best/best.html?f_bid=HD4001')
+    data = htmlcrawler.crawl_1300k_best(html)
+    htmlcrawler.insert_data(db_path="test.db", data=data)
 
 
 if __name__ == "__main__":
