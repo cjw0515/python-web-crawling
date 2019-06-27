@@ -12,7 +12,11 @@ cs.execute(query)
 
 
 #create table
-query = "CREATE TABLE IF NOT EXISTS t1 (id INTEGER PRIMARY_KEY NOT_NULL, name VARCHAR(255), at DATETIME)"
+query = """CREATE TABLE IF NOT EXISTS t1 (
+id INTEGER PRIMARY_KEY NOT_NULL
+, name VARCHAR(255)
+, at DATETIME
+)"""
 cs.execute(query)
 
 #insert table

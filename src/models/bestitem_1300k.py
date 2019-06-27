@@ -13,3 +13,4 @@ class BestItem:
     salePrice: int = None
     numOfReview: int = None
     numOfLike: int = None
+    regDate: str = None
