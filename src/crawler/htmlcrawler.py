@@ -6,7 +6,9 @@ import common
 import re
 from urllib import parse
 
+
 def get_html(url):
+    print("get html from %s" % url)
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     options.add_argument('window-size=1920x1080')
@@ -14,7 +16,7 @@ def get_html(url):
 
     driver = webdriver.Chrome('chromedriver', options=options)
     driver.get(url)
-    driver.implicitly_wait(3)
+    # driver.implicitly_wait(3)
     html = driver.page_source
     driver.quit()
 
@@ -97,8 +99,16 @@ def crawl_1300k_best(html):
         tmp_price_dic = get_item_price(item('span', {'class': 'gprice'})[0])
         price = tmp_price_dic['Price']
         sale_price = tmp_price_dic['SalePrice']
-        num_of_review = 3235
-        num_of_like = 2342
+        num_of_review = None
+        num_of_like = None
+######################################
+        # item_detail_url = 'http://www.1300k.com/shop/goodsDetail.html?f_goodsno=' + item_code
+        # tmp_html = get_html(item_detail_url)
+        #
+        # soup = BeautifulSoup(tmp_html, 'html.parser')
+        # num_of_like = common.get_integer(soup.select("#idGoodsFavorCnt")[0].text)
+        # num_of_review = common.get_integer(soup.select("#gdt_nav_desc .txt_ps")[0]('em')[0].text)
+######################################
 
         tmp_obj = (
             category
@@ -149,15 +159,9 @@ def get_item_price(price_tag_obj):
     return price
 
 if __name__ == "__main__":
-    html = get_html('http://www.1300k.com/shop/best/best.html?f_bid=HD4001')
+    html = get_html('http://www.1300k.com/shop/goodsDetail.html?f_goodsno=215024307523')
     soup = BeautifulSoup(html, 'html.parser')
-    # item_list = soup.select('.gc_glst > li')
-    # img = soup.select('.gds_img img')[0]['src']
-    tmp = soup.select('.bst_rank .rank_bx2 li')
 
-    for item in tmp:
-        url = parse.urlparse(item.find('a', href=re.compile('goodsDetail.html?')).attrs['href'])
-        print(parse.parse_qs(url.query)['f_goodsno'][0])
 
 
 
