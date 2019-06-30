@@ -4,21 +4,29 @@ from selenium import webdriver
 import sqlite_db
 import common
 import re
+import logger
 from urllib import parse
 
 
-def get_html(url):
+def get_html(url, waiting=False):
+    log = logger.logger('get_html')
     print("get html from %s" % url)
-    options = webdriver.ChromeOptions()
-    options.add_argument('headless')
-    options.add_argument('window-size=1920x1080')
-    options.add_argument("disable-gpu")
+    log.info("get html from %s" % url)
+    try:
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        options.add_argument('window-size=1920x1080')
+        options.add_argument("disable-gpu")
 
-    driver = webdriver.Chrome('chromedriver', options=options)
-    driver.get(url)
-    # driver.implicitly_wait(3)
-    html = driver.page_source
-    driver.quit()
+        driver = webdriver.Chrome('chromedriver', options=options)
+        driver.get(url)
+        if waiting:
+            driver.implicitly_wait(waiting)
+        html = driver.page_source
+        driver.quit()
+
+    except Exception as e:
+        log.error(e)
 
     return html
 
@@ -61,6 +69,8 @@ def insert_data(db_path, data):
 
 
 def crawl_1300k_best(html):
+
+    log = logger.logger('crawl_1300k_best')
     soup = BeautifulSoup(html, 'html.parser')
     item_list = soup.select('.gc_glst > li')
 
@@ -69,60 +79,69 @@ def crawl_1300k_best(html):
         {'tag': 'span', 'old': 'gc_gpr_del', 'new': 'gpr_del'},
         {'tag': 'span', 'old': 'gc_gpr_sale', 'new': 'gpr_sale'}
     ]
-    best2to5 = replace_attr(soup.select('.bst_rank .rank_bx2 li'), list_for_replace)
-    bset1 = replace_attr(soup.select('.bst_rank .rank_bx1'), list_for_replace)
 
-    # best1 상품 태그 삽입
-    for item in bset1:
-        new_tag = soup.new_tag('span', attrs={"class": "ico_rank"})
-        new_tag.string = "1"
-        item.append(new_tag)
-        item.append(soup.new_tag('span', attrs={'class': 'gimg', 'gimg': item('img')[0].attrs['src']}))
+    try:
+        best2to5 = replace_attr(soup.select('.bst_rank .rank_bx2 li'), list_for_replace)
+        bset1 = replace_attr(soup.select('.bst_rank .rank_bx1'), list_for_replace)
 
-    # best2~5상품 태그 삽입
-    for item in best2to5:
-        item.append(soup.new_tag('span', attrs={'class': 'gimg', 'gimg': item('img')[0].attrs['src']}))
+        # best1 상품 태그 삽입
+        for item in bset1:
+            new_tag = soup.new_tag('span', attrs={"class": "ico_rank"})
+            new_tag.string = "1"
+            item.append(new_tag)
+            item.append(soup.new_tag('span', attrs={'class': 'gimg', 'gimg': item('img')[0].attrs['src']}))
 
-    item_list = item_list + best2to5
-    item_list = item_list + bset1
+        # best2~5상품 태그 삽입
+        for item in best2to5:
+            item.append(soup.new_tag('span', attrs={'class': 'gimg', 'gimg': item('img')[0].attrs['src']}))
+
+        item_list = item_list + best2to5
+        item_list = item_list + bset1
+    except Exception as e:
+        log.error(e)
+        pass
 
     item_arr = []
 
-    for item in item_list:
-        category = '1'
-        rank = item('span', {'class': 'ico_rank'})[0].text
-        image_URL = item('span', {'class': 'gimg'})[0].attrs['gimg']
-        url = parse.urlparse(item.find('a', href=re.compile('goodsDetail.html?')).attrs['href'])
-        item_code = parse.parse_qs(url.query)['f_goodsno'][0]
-        brand = item('a', {'class': 'a_bname'})[0].text
-        item_name = item('a', {'class': 'a_gname'})[0].text
-        tmp_price_dic = get_item_price(item('span', {'class': 'gprice'})[0])
-        price = tmp_price_dic['Price']
-        sale_price = tmp_price_dic['SalePrice']
-        num_of_review = None
-        num_of_like = None
-######################################
-        # item_detail_url = 'http://www.1300k.com/shop/goodsDetail.html?f_goodsno=' + item_code
-        # tmp_html = get_html(item_detail_url)
-        #
-        # soup = BeautifulSoup(tmp_html, 'html.parser')
-        # num_of_like = common.get_integer(soup.select("#idGoodsFavorCnt")[0].text)
-        # num_of_review = common.get_integer(soup.select("#gdt_nav_desc .txt_ps")[0]('em')[0].text)
-######################################
+    try:
+        for item in item_list:
+            category = '1'
+            rank = item('span', {'class': 'ico_rank'})[0].text
+            image_URL = item('span', {'class': 'gimg'})[0].attrs['gimg']
+            url = parse.urlparse(item.find('a', href=re.compile('goodsDetail.html?')).attrs['href'])
+            item_code = parse.parse_qs(url.query)['f_goodsno'][0]
+            brand = item('a', {'class': 'a_bname'})[0].text
+            item_name = item('a', {'class': 'a_gname'})[0].text
+            tmp_price_dic = get_item_price(item('span', {'class': 'gprice'})[0])
+            price = tmp_price_dic['Price']
+            sale_price = tmp_price_dic['SalePrice']
+            num_of_review = None
+            num_of_like = None
+    ######################################
+            # item_detail_url = 'http://www.1300k.com/shop/goodsDetail.html?f_goodsno=' + item_code
+            # tmp_html = get_html(item_detail_url)
+            #
+            # soup = BeautifulSoup(tmp_html, 'html.parser')
+            # num_of_like = common.get_integer(soup.select("#idGoodsFavorCnt")[0].text)
+            # num_of_review = common.get_integer(soup.select("#gdt_nav_desc .txt_ps")[0]('em')[0].text)
+    ######################################
 
-        tmp_obj = (
-            category
-            , rank
-            , image_URL
-            , item_code
-            , brand
-            , item_name
-            , price
-            , sale_price
-            , num_of_review
-            , num_of_like
-        )
-        item_arr.append(tmp_obj)
+            tmp_obj = (
+                category
+                , rank
+                , image_URL
+                , item_code
+                , brand
+                , item_name
+                , price
+                , sale_price
+                , num_of_review
+                , num_of_like
+            )
+            item_arr.append(tmp_obj)
+    except Exception as e:
+        log.error(e)
+        pass
 
     return item_arr
 
@@ -157,6 +176,7 @@ def get_item_price(price_tag_obj):
         price['SalePrice'] = None
 
     return price
+
 
 if __name__ == "__main__":
     html = get_html('http://www.1300k.com/shop/goodsDetail.html?f_goodsno=215024307523')
