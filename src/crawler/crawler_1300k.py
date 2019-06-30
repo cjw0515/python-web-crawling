@@ -68,7 +68,7 @@ def insert_data(db_path, data):
         db.execute_many(insert_table_sql, data)
 
 
-def crawl_1300k_best(html):
+def crawl_1300k_best(html, category_name):
 
     log = logger.logger('crawl_1300k_best')
     soup = BeautifulSoup(html, 'html.parser')
@@ -105,7 +105,7 @@ def crawl_1300k_best(html):
 
     try:
         for item in item_list:
-            category = '1'
+            category = category_name
             rank = item('span', {'class': 'ico_rank'})[0].text
             image_URL = item('span', {'class': 'gimg'})[0].attrs['gimg']
             url = parse.urlparse(item.find('a', href=re.compile('goodsDetail.html?')).attrs['href'])
@@ -146,6 +146,25 @@ def crawl_1300k_best(html):
     return item_arr
 
 
+def get_category():
+    html = get_html('http://www.1300k.com/shop/best/best.html')
+    soup = BeautifulSoup(html, 'html.parser')
+
+    category_dic = {}
+
+    for item in soup.select('.bst .gc_gnb_cate a'):
+        url = item.attrs['href']
+        if re.search("shop/best/best.html\?f_cno1=", url):
+            url_obj = parse.urlparse(url)
+            category_code = parse.parse_qs(url_obj.query)['f_cno1'][0]
+            category_name = item.text
+            category_dic[category_name] = category_code
+
+    category_dic['전체'] = '1'
+
+    return category_dic
+
+
 def insert_tag(obj, new_tag_list):
     idx = 0
 
@@ -179,16 +198,7 @@ def get_item_price(price_tag_obj):
 
 
 if __name__ == "__main__":
-    html = get_html('http://www.1300k.com/shop/goodsDetail.html?f_goodsno=215024307523')
-    soup = BeautifulSoup(html, 'html.parser')
-
-
-
-
-
-
-
-
+    print('crawler')
 
         # tmp_obj = bestitem_1300k.BestItem(
         #     category=_category,
