@@ -5,6 +5,7 @@ import sqlite_db
 import common
 import re
 import logger
+import traceback
 from urllib import parse
 
 
@@ -26,6 +27,7 @@ def get_html(url, waiting=False):
         driver.quit()
 
     except Exception as e:
+        print(traceback)
         log.error(e)
 
     return html
@@ -68,7 +70,7 @@ def insert_data(db_path, data):
         db.execute_many(insert_table_sql, data)
 
 
-def crawl_1300k_best(html, category_name):
+def crawl_1300k_best(html, category_name=None):
 
     log = logger.logger('crawl_1300k_best')
     soup = BeautifulSoup(html, 'html.parser')
@@ -98,6 +100,7 @@ def crawl_1300k_best(html, category_name):
         item_list = item_list + best2to5
         item_list = item_list + bset1
     except Exception as e:
+        traceback.print_exc()
         log.error(e)
         pass
 
@@ -141,6 +144,7 @@ def crawl_1300k_best(html, category_name):
             item_arr.append(tmp_obj)
     except Exception as e:
         log.error(e)
+        traceback.print_exc()
         pass
 
     return item_arr
@@ -160,7 +164,7 @@ def get_category():
             category_name = item.text
             category_dic[category_name] = category_code
 
-    category_dic['전체'] = '1'
+    category_dic['전체'] = 'HD4001'
 
     return category_dic
 
@@ -177,9 +181,15 @@ def insert_tag(obj, new_tag_list):
 
 
 def replace_attr(obj, param_list):
-
+    #
+    # list_for_replace = [
+    #     {'tag': 'span', 'old': 'gc_gpr_del', 'new': 'gpr_del'},
+    #     {'tag': 'span', 'old': 'gc_gpr_sale', 'new': 'gpr_sale'}
+    # ]
+    #
     for dic in param_list:
         for item in obj:
+            # print(item(dic['tag'], {'class': dic['old']}))
             item(dic['tag'], {'class': dic['old']})[0]['class'] = dic['new']
 
     return obj
