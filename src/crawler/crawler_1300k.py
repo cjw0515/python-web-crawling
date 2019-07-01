@@ -9,22 +9,26 @@ import traceback
 from urllib import parse
 
 
-def get_html(url, waiting=False):
+def get_driver():
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    options.add_argument('window-size=1920x1080')
+    options.add_argument("disable-gpu")
+    driver = webdriver.Chrome('chromedriver', options=options)
+
+    return driver
+
+
+def get_html(driver, url, waiting=False):
     log = logger.logger('get_html')
     print("get html from %s" % url)
     log.info("get html from %s" % url)
     try:
-        options = webdriver.ChromeOptions()
-        options.add_argument('headless')
-        options.add_argument('window-size=1920x1080')
-        options.add_argument("disable-gpu")
-
-        driver = webdriver.Chrome('chromedriver', options=options)
         driver.get(url)
         if waiting:
             driver.implicitly_wait(waiting)
         html = driver.page_source
-        driver.quit()
+        # driver.quit()
 
     except Exception as e:
         print(traceback)
@@ -150,8 +154,8 @@ def crawl_1300k_best(html, category_name=None):
     return item_arr
 
 
-def get_category():
-    html = get_html('http://www.1300k.com/shop/best/best.html')
+def get_category(driver):
+    html = get_html(driver, 'http://www.1300k.com/shop/best/best.html')
     soup = BeautifulSoup(html, 'html.parser')
 
     category_dic = {}
