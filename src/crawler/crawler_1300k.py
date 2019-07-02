@@ -11,7 +11,7 @@ from urllib import parse
 
 def get_driver():
     options = webdriver.ChromeOptions()
-    options.add_argument('headless')
+    # options.add_argument('headless')
     options.add_argument('window-size=1920x1080')
     options.add_argument("disable-gpu")
     driver = webdriver.Chrome('chromedriver', options=options)
@@ -83,35 +83,29 @@ def crawl_1300k_best(html, category_name=None):
     # 같은 용도의 객체이나, 마크업이 다른것이 소수일 경우 메인로직에서 연산을 줄이기 위한 별도 처리과정 필요
     list_for_replace = [
         {'tag': 'span', 'old': 'gc_gpr_del', 'new': 'gpr_del'},
-        {'tag': 'span', 'old': 'gc_gpr_sale', 'new': 'gpr_sale'}
+        {'tag': 'span', 'old': 'gc_gpr_sale', 'new': 'gpr_sale'},
+        {'tag': 'span', 'old': 'gc_gpr_orig', 'new': 'gpr_orig'},
     ]
 
-    try:
-        best2to5 = replace_attr(soup.select('.bst_rank .rank_bx2 li'), list_for_replace)
-        bset1 = replace_attr(soup.select('.bst_rank .rank_bx1'), list_for_replace)
+    best2to5 = replace_attr(soup.select('.bst_rank .rank_bx2 li'), list_for_replace)
+    best1 = replace_attr(soup.select('.bst_rank .rank_bx1'), list_for_replace)
+    # best1 상품 태그 삽입
+    for item in best1:
+        new_tag = soup.new_tag('span', attrs={"class": "ico_rank"})
+        new_tag.string = "1"
+        item.append(new_tag)
+        item.append(soup.new_tag('span', attrs={'class': 'gimg', 'gimg': item('img')[0].attrs['src']}))
+    # best2~5상품 태그 삽입
+    for item in best2to5:
+        item.append(soup.new_tag('span', attrs={'class': 'gimg', 'gimg': item('img')[0].attrs['src']}))
 
-        # best1 상품 태그 삽입
-        for item in bset1:
-            new_tag = soup.new_tag('span', attrs={"class": "ico_rank"})
-            new_tag.string = "1"
-            item.append(new_tag)
-            item.append(soup.new_tag('span', attrs={'class': 'gimg', 'gimg': item('img')[0].attrs['src']}))
-
-        # best2~5상품 태그 삽입
-        for item in best2to5:
-            item.append(soup.new_tag('span', attrs={'class': 'gimg', 'gimg': item('img')[0].attrs['src']}))
-
-        item_list = item_list + best2to5
-        item_list = item_list + bset1
-    except Exception as e:
-        traceback.print_exc()
-        log.error(e)
-        pass
+    item_list = item_list + best2to5
+    item_list = item_list + best1
 
     item_arr = []
 
-    try:
-        for item in item_list:
+    for item in item_list:
+        try:
             category = category_name
             rank = item('span', {'class': 'ico_rank'})[0].text
             image_URL = item('span', {'class': 'gimg'})[0].attrs['gimg']
@@ -146,10 +140,10 @@ def crawl_1300k_best(html, category_name=None):
                 , num_of_like
             )
             item_arr.append(tmp_obj)
-    except Exception as e:
-        log.error(e)
-        traceback.print_exc()
-        pass
+        except Exception as e:
+            log.error(e)
+            traceback.print_exc()
+            pass
 
     return item_arr
 
@@ -193,8 +187,8 @@ def replace_attr(obj, param_list):
     #
     for dic in param_list:
         for item in obj:
-            # print(item(dic['tag'], {'class': dic['old']}))
-            item(dic['tag'], {'class': dic['old']})[0]['class'] = dic['new']
+            if len(item(dic['tag'], {'class': dic['old']})) > 0:
+                item(dic['tag'], {'class': dic['old']})[0]['class'] = dic['new']
 
     return obj
 
