@@ -208,15 +208,3 @@ def get_item_price(price_tag_obj):
 if __name__ == "__main__":
     print('crawler')
 
-        # tmp_obj = bestitem_1300k.BestItem(
-        #     category=_category,
-        #     rank=_rank,
-        #     imageURL=_imageURL,
-        #     itemCode=_itemCode,
-        #     brand=_brand,
-        #     itemName=_itemName,
-        #     price=_price,
-        #     salePrice=_salePrice,
-        #     numOfReview=_numOfReview,
-        #     numOfLike=_numOfLike
-        # )
