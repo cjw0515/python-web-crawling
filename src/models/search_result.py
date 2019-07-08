@@ -2,8 +2,11 @@ from dataclasses import dataclass
 
 
 @dataclass
-class TenItem:
-    imageURL: str = None
+class SearchResultItem:
     itemCode: int = None
-    itemName: str = None
-    itemid_1300k: int = None
+    ItemName: str = None
+    brandEName: str = None
+    brandKName: str = None
+    imgURL1: str = None
+    imgURL2: str = None
+    itemTag: str = None
