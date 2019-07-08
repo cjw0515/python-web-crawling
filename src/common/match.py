@@ -108,12 +108,13 @@ class MatchItems:
             for i in range(0, ran_num):
                 added_text = added_text + " " + item_name_arr[i]
 
+            added_text = brand_name + added_text
             for j in range(0, len(added_text_arr)):
                 if added_text_arr[j] == added_text:
                     is_exists = True
                     break
             if not is_exists:
-                added_text_arr.append(brand_name + added_text)
+                added_text_arr.append(added_text)
 
         return added_text_arr
 
@@ -148,7 +149,7 @@ if __name__ == "__main__":
     test_str1 = "펜아저씨"
     test_str2 = "위즈독서대 60M2 2단독서대 독서대 책받침대"
     match = MatchItems()
-    for i in range(0,30):
+    for i in range(0, 30):
         print(match.get_shuffle_keyword(brand_name=test_str1, item_name=test_str2, num_add=2))
 
 
