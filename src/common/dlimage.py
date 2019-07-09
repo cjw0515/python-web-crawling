@@ -86,6 +86,9 @@ def get_simillarity(img_path1, img_path2):
 
 
 if __name__ == '__main__':
-    s = get_simillarity(r"C:\BA\python-web-crawling\src\images\1300k\image1.jpg", r"C:\BA\python-web-crawling\src\images\1300k\img_4654.jpg")
+    img_path1 = r"C:\BA\python-web-crawling\src\images\1300k\img_전체_215024760905.jpg"
+    img_path2 = r"C:\BA\python-web-crawling\src\images\10x10\img_전체_215024760905_1923076_1.jpg"
+    s = get_simillarity(img_path1=img_path1, img_path2=img_path2)
+
     print(s)
 
