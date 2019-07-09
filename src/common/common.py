@@ -1,4 +1,5 @@
 import requests
+from constant import TEM_SEARCH_API
 
 
 def get_integer(s):
@@ -6,6 +7,6 @@ def get_integer(s):
 
 
 def get_items_ten_api(keyword):
-    response = requests.get('http://wapi.10x10.co.kr/search/getitemlist.asp?q={keyword}'.format(keyword=keyword))
+    response = requests.get(TEM_SEARCH_API+'?q={keyword}'.format(keyword=keyword))
 
     return response.text
