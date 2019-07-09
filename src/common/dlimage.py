@@ -1,11 +1,12 @@
 import requests
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
-from skimage import data, io, filters
+import matplotlib.pyplot as plt
+import matplotlib
+from skimage import data, io, filters, color
 from skimage.measure import compare_ssim as ssim
+from skimage.transform import rescale, resize, downscale_local_mean
 import skimage
-
 
 def image_download(image_url, path, suffix):
     response = requests.get(image_url, stream=True)
@@ -71,7 +72,7 @@ class compareImg:
 
 
 def compare_imgs(img1, img2):
-    return ssim(img1, img2, multichannel=True)
+    return ssim(img1, img2, multichannel=True, data_range=img1.max() - img2.min())
 
 
 def get_img(path):
@@ -79,16 +80,32 @@ def get_img(path):
 
 
 def get_simillarity(img_path1, img_path2):
-    img1 = skimage.img_as_float(get_img(img_path1))
-    img2 = skimage.img_as_float(get_img(img_path2))
+    imgA = get_img(img_path1)
+    imgB = resize(get_img(img_path2), imgA.shape)
 
-    return compare_imgs(img1, img2)
+    imgA = skimage.img_as_float(get_img(img_path1))
+    imgB = skimage.img_as_float(resize(get_img(img_path2), imgA.shape))
+
+    fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+    ax = axes.ravel()
+
+    ax[0].imshow(imgA)
+    ax[1].imshow(imgB)
+    ax[1].set_xlabel(compare_imgs(imgA, imgB))
+
+    fig.tight_layout()
+    plt.show()
+
+
+    # skimage.img_as_float()
+
+    return compare_imgs(imgA, imgB)
 
 
 if __name__ == '__main__':
-    img_path1 = r"C:\BA\python-web-crawling\src\images\1300k\img_전체_215024760905.jpg"
-    img_path2 = r"C:\BA\python-web-crawling\src\images\10x10\img_전체_215024760905_1923076_1.jpg"
+    img_path1 = r"C:\BA\python-web-crawling\src\images\1300k\img_전체_215024702984.jpg"
+    img_path2 = r"C:\BA\python-web-crawling\src\images\10x10\img_전체_215024702984_2339102_2.jpg"
+    # img_path2 = r"C:\BA\python-web-crawling\src\images\10x10\img_전체_215024397505_2056826_2.jpg"
     s = get_simillarity(img_path1=img_path1, img_path2=img_path2)
 
     print(s)
-
