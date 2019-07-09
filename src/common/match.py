@@ -1,12 +1,14 @@
 import sqlite_db
 from dlimage import image_download as imgd
+from dlimage import get_simillarity as get_sim
 from common import get_items_ten_api as ten_api
 import constant as const
 from bestitem_1300k import BestItem
 from search_result import SearchResultItem
 import re
 import random
-
+import shutil
+import textdistance
 
 class MatchItems:
 
@@ -34,7 +36,7 @@ class MatchItems:
             )
             self.items.append(tmp_obj)
 
-    def set_search_result(self, keyword_container, item_id, category):
+    def set_search_result(self, keyword_container, item_id, category, min: int, max: int):
         result_obj = {
             'cnt': 0,
             'itemid': item_id,
@@ -51,9 +53,9 @@ class MatchItems:
         cnt = int(result_arr[0].replace("\r", ""))
         result_obj['cnt'] = cnt
 
-        if cnt < 1 or cnt > 30:
+        if cnt < min or cnt > max:
             # 재귀
-            self.set_search_result(keyword_container, item_id, category)
+            self.set_search_result(keyword_container, item_id, category, min, max)
             return
 
         item_arr = []
@@ -81,14 +83,29 @@ class MatchItems:
             imgd(item.imageURL, const.IMG_1300k_DIR
                  , "{category}_{itemid}".format(category=item.category, itemid=item.itemCode))
 
-
     def search_img_download(self):
         def tmp_fn(obj):
             return obj['cnt'] != 0
-        for item in list(filter(tmp_fn, self.search_result)):
-            print(item)
-            # imgd(item.imageURL, const.IMG_10x10_DIR
-            #      , "{category}_{itemid}".format(category=item['category'], itemid=item['itemid']))
+        for result_objs in list(filter(tmp_fn, self.search_result)):
+            for item in result_objs['result_items']:
+                imgd(item.imgURL1
+                     , const.IMG_10x10_DIR
+                     , "{category}_{itemid}_{tencode}_{order}".format(
+                        category=result_objs['category']
+                        , itemid=result_objs['itemid']
+                        , tencode=item.itemCode
+                        , order=1
+                        ))
+
+                if item.imgURL2 != '':
+                    imgd(item.imgURL2
+                         , const.IMG_10x10_DIR
+                         , "{category}_{itemid}_{tencode}_{order}".format(
+                            category=result_objs['category']
+                            , itemid=result_objs['itemid']
+                            , tencode=item.itemCode
+                            , order=2
+                            ))
 
     def search(self, keyword):
         api_result = ten_api(keyword)
@@ -96,8 +113,11 @@ class MatchItems:
 
         return result_arr
 
-    def get_shuffle_keyword(self, brand_name: str, item_name: str, num_add: int):
+    def get_shuffled_keywords(self, brand_name: str, item_name: str, num_add: int):
         item_name_arr = item_name.split(" ")
+        if len(item_name_arr) < 2:
+            return []
+
         added_text_arr = []
         while len(added_text_arr) < len(item_name_arr):
             random.shuffle(item_name_arr)
@@ -105,6 +125,7 @@ class MatchItems:
 
             added_text = ""
             is_exists = False
+
             for i in range(0, ran_num):
                 added_text = added_text + " " + item_name_arr[i]
 
@@ -120,7 +141,8 @@ class MatchItems:
 
 
 if __name__ == "__main__":
-    # match = MatchItems()
+    match = MatchItems()
+
     # match.set_items(sql="""
     #        select *
     #      from best100_1300k
@@ -132,7 +154,15 @@ if __name__ == "__main__":
     #         item.brand,
     #         item.itemName
     #     ]
-    #     match.set_search_result(keyword_container=keyword_container, item_id=item.itemCode, category=item.category)
+    #     keyword_container = match.get_shuffled_keywords(brand_name=item.brand
+    #                                                     , item_name=item.itemName
+    #                                                     , num_add=2) + keyword_container
+    #
+    #     match.set_search_result(keyword_container=keyword_container
+    #                             , item_id=item.itemCode
+    #                             , category=item.category
+    #                             , min=1
+    #                             , max=30)
     #
     # match.search_img_download()
 
@@ -144,16 +174,6 @@ if __name__ == "__main__":
     # print(match.search_result)
     # print(len(match.search_result))
     # print(len(result))
-
-
-    test_str1 = "펜아저씨"
-    test_str2 = "위즈독서대 60M2 2단독서대 독서대 책받침대"
-    match = MatchItems()
-    for i in range(0, 30):
-        print(match.get_shuffle_keyword(brand_name=test_str1, item_name=test_str2, num_add=2))
-
-
-
 
 
 
