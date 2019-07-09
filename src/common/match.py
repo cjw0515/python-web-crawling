@@ -143,37 +143,38 @@ class MatchItems:
 if __name__ == "__main__":
     match = MatchItems()
 
-    # match.set_items(sql="""
-    #        select *
-    #      from best100_1300k
-    #     where category = "전체"
-    #        """, db='../1300k_best.db')
-    #
-    # for item in match.items:
-    #     keyword_container = [
-    #         item.brand,
-    #         item.itemName
-    #     ]
-    #     keyword_container = match.get_shuffled_keywords(brand_name=item.brand
-    #                                                     , item_name=item.itemName
-    #                                                     , num_add=2) + keyword_container
-    #
-    #     match.set_search_result(keyword_container=keyword_container
-    #                             , item_id=item.itemCode
-    #                             , category=item.category
-    #                             , min=1
-    #                             , max=30)
+    match.set_items(sql="""
+           select *
+         from best100_1300k
+        where category = "전체"
+           """, db='../1300k_best.db')
+
+    for item in match.items:
+        keyword_container = [
+            item.brand,
+            item.itemName
+        ]
+        keyword_container = match.get_shuffled_keywords(brand_name=item.brand
+                                                        , item_name=item.itemName
+                                                        , num_add=2) + keyword_container
+
+        match.set_search_result(keyword_container=keyword_container
+                                , item_id=item.itemCode
+                                , category=item.category
+                                , min=1
+                                , max=30)
     #
     # match.search_img_download()
 
 
 
-    # def tmp_fn(obj):
-    #     return obj['cnt'] == 0
-    # result = list(filter(tmp_fn, match.search_result))
-    # print(match.search_result)
-    # print(len(match.search_result))
-    # print(len(result))
+    def tmp_fn(obj):
+        return obj['cnt'] == 0
+    result = list(filter(tmp_fn, match.search_result))
+    for item in match.search_result:
+        print(item)
+    print(len(match.search_result))
+    print(len(result))
 
 
 
