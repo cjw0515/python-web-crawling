@@ -79,23 +79,24 @@ def get_img(path):
     return io.imread(path)
 
 
-def get_simillarity(img_path1, img_path2):
+def get_simillarity(img_path1, img_path2, show=False):
     imgA = get_img(img_path1)
     imgB = resize(get_img(img_path2), imgA.shape)
 
     imgA = skimage.img_as_float(get_img(img_path1))
     imgB = skimage.img_as_float(resize(get_img(img_path2), imgA.shape))
 
-    fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-    ax = axes.ravel()
+    if show:
+        fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+        ax = axes.ravel()
 
-    ax[0].imshow(imgA)
-    ax[1].imshow(imgB)
-    ax[1].set_xlabel(compare_imgs(imgA, imgB))
+        ax[0].imshow(imgA)
+        ax[1].imshow(imgB)
+        ax[1].set_xlabel(compare_imgs(imgA, imgB))
 
-    fig.tight_layout()
-    plt.show()
-
+        fig.tight_layout()
+        plt.show()
+        plt.close(fig)
 
     # skimage.img_as_float()
 
