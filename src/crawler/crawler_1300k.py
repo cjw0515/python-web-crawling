@@ -6,6 +6,7 @@ import common
 import re
 import logger
 import traceback
+from constant import URL_1300K_BEST
 from urllib import parse
 
 
@@ -23,6 +24,7 @@ def get_html(driver, url, waiting=False):
     log = logger.logger('get_html')
     print("get html from %s" % url)
     log.info("get html from %s" % url)
+    html = ''
     try:
         driver.get(url)
         if waiting:
@@ -52,7 +54,8 @@ def insert_data(db_path, data):
             "SalePrice"	INTEGER,
             "NumOfReview"	INTEGER,
             "NumOfLike"	INTEGER,
-            "RegDate" DATETIME
+            "RegDate" DATETIME,
+            "MatchedItem" TEXT
         )
         """
         db.execute(create_table_sql)
@@ -68,7 +71,7 @@ def insert_data(db_path, data):
             , SalePrice
             , NumOfReview
             , NumOfLike
-            , RegDate
+            , RegDate            
         )values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATETIME('NOW'))
         """
         db.execute_many(insert_table_sql, data)
@@ -149,13 +152,14 @@ def crawl_1300k_best(html, category_name=None):
 
 
 def get_category(driver):
-    html = get_html(driver, 'http://www.1300k.com/shop/best/best.html')
+    html = get_html(driver, URL_1300K_BEST)
     soup = BeautifulSoup(html, 'html.parser')
 
     category_dic = {}
 
     for item in soup.select('.bst .gc_gnb_cate a'):
         url = item.attrs['href']
+
         if re.search("shop/best/best.html\?f_cno1=", url):
             url_obj = parse.urlparse(url)
             category_code = parse.parse_qs(url_obj.query)['f_cno1'][0]
