@@ -17,7 +17,8 @@ class MatchItems:
         self.items = []
         self.ten_items = []
         self.search_result = []
-        self.keyword_cont_list = []
+        self.matched_items = set()
+        # self.keyword_cont_list = []
 
     def set_items(self, sql, db):
         db = sqlite_db.SqliteDatabase(db)
@@ -110,12 +111,14 @@ class MatchItems:
                             , order=2
                             ))
 
-    def set_keyword_cont_list(self, item_code, keyword_container: list):
-        keyword_cont_obj = {
-            'item_code': item_code,
-            'keyword_cont': keyword_container
-        }
-        self.keyword_cont_list.append(keyword_cont_obj)
+    # def set_keyword_cont_list(self, item_code, keyword_container: list):
+    #     keyword_cont_obj = {
+    #         'item_code': item_code,
+    #         'keyword_cont': keyword_container
+    #     }
+    #     self.keyword_cont_list.append(keyword_cont_obj)
+    def set_matched_items(self, matched_results: list):
+        self.matched_items.update(set(matched_results))
 
     @staticmethod
     def search(keyword):
@@ -164,13 +167,12 @@ class MatchItems:
                                              , itemid=itemid_1300k
                                              , category=category)
 
-        return matched_items
+        self.set_matched_items(matched_items)
 
     @staticmethod
-    def match_imgs(img_arr1: list, img_arr2: list, itemid:int, category:str):
+    def match_imgs(img_arr1: list, img_arr2: list, itemid: int, category: str):
         result_arr = []
         name_format = "img_{category}_{itemid}".format(category=category, itemid=itemid)
-
         for item_img in img_arr1:
             if item_img.startswith(name_format):
                 for ten_img in img_arr2:
@@ -178,10 +180,8 @@ class MatchItems:
                         # 비교
                         result = sim(os.path.join(const.IMG_1300k_DIR, item_img)
                                      , os.path.join(const.IMG_10x10_DIR, ten_img))
-                        print(result)
                         if result > 0.9:
-                            result_arr.append({int(splitext(item_img)[0].split("_")[2]): ten_img.split("_")[3]})
-                            print(result_arr)
+                            result_arr.append((int(splitext(item_img)[0].split("_")[2]), ten_img.split("_")[3]))
 
         return result_arr
 
@@ -193,89 +193,82 @@ class MatchItems:
                 continue
             for item in result['result_items']:
                 if string_match(result['item_name'], item.ItemName) > 0.9:
-                    result_arr.append({result['itemid']: item.itemCode})
+                    result_arr.append((result['itemid'], item.itemCode))
 
-        return result_arr
+        self.set_matched_items(result_arr)
 
+    def update_matched_data(self, category):
+        with sqlite_db.SqliteDatabase(const.DB_1300K_BEST_PATH) as db:
+            for item in self.matched_items:
+                item_code = item[0]
+                ten_code = item[1]
+                items = db.query(sql="""
+                   select MatchedItem
+                     from best100_1300k
+                    where category = ?
+                      and ItemCode = ?
+                """, params=(category, item_code))
 
+                if len(items) > 0:
+                    if items[0][0] != None:
+                        tmp_itemid = str(items[0][0]) + "," + str(ten_code)
+                        print(tmp_itemid)
+                    else:
+                        tmp_itemid = str(ten_code)
+                        print(tmp_itemid)
+
+                    db.execute(sql="""
+                                    update best100_1300k
+                                       set MatchedItem = ?
+                                     where category = ?
+                                       and ItemCode = ?
+                                    """, params=(tmp_itemid, category, item_code))
+
+    def run(self, category):
+        # 아이템 셋
+        print("상품 셋...")
+        self.set_items(sql="""
+               select *
+             from best100_1300k
+            where category = "{category}"
+               """.format(category=category), db=const.DB_1300K_BEST_PATH)
+
+        # 아이템 검색 결과 셋
+        print("검색중...")
+        for item in self.items:
+            keyword_container = [
+                item.brand,
+                item.itemName
+            ]
+            keyword_container = self.get_shuffled_keywords(brand_name=item.brand
+                                                            , item_name=item.itemName
+                                                            , num_add=2) + keyword_container
+
+            self.set_search_result(keyword_container=keyword_container
+                                    , item_id=item.itemCode
+                                    , item_name=item.itemName
+                                    , category=item.category
+                                    , min=1
+                                    , max=30)
+
+        # 이미지 다운로드
+        # self.item_img_download()
+        # self.search_img_download()
+
+        # 아이템 매칭
+        print("이미지 매칭중...")
+        self.match_items()
+        print("아이템 이름 매칭중...")
+        self.match_item_names()
+
+        # 매치상품 업데이트
+        # self.update_matched_data(category)
+        return True
 
 if __name__ == "__main__":
     match = MatchItems()
-
-    match.set_items(sql="""
-           select *
-         from best100_1300k
-        where category = "전체"
-           """, db='../1300k_best.db')
-
-    # print(match.match_items())
-
-    # print(common.string_match('공백 세탁조 크리너 3+1', '공백 세탁조 크리너 (4매입) 3+1'))
-
-
-    # for item in match.items:
-    #     keyword_container = [
-    #         item.brand,
-    #         item.itemName
-    #     ]
-    #     keyword_container = match.get_shuffled_keywords(brand_name=item.brand
-    #                                                     , item_name=item.itemName
-    #                                                     , num_add=2) + keyword_container
-    #
-    #     match.set_search_result(keyword_container=keyword_container
-    #                             , item_id=item.itemCode
-    #                             , item_name=item.itemName
-    #                             , category=item.category
-    #                             , min=1
-    #                             , max=30)
-
-    # print(match.match_item_names())
-    result1 = [{215024411696: '1921111'}, {215024691237: '2100659'}, {215024343576: '1620286'},
-         {215024596347: '2238780'}, {215024452104: '2114323'}, {215024452104: '2114323'},
-         {215023217837: '1507933'}, {215024596618: '2246341'}, {215024278659: '1974315'},
-         {215023033246: '1429847'}, {215023108566: '1428513'}, {215022109166: '1013844'},
-         {215024643100: '2283244'}, {215024663167: '2306758'}, {215024702984: '2339102'},
-         {215024278614: '1974138'}, {215024218432: '1930373'}, {215024218432: '1930373'},
-         {215024640397: '2286228'}, {215024772581: '2406132'}, {215024372307: '2006537'},
-         {215024591220: '2246292'}, {215024702485: '2317055'}, {215023586975: '1932495'},
-         {215024714845: '2356025'}, {215023934931: '1781435'}, {215022422844: '1164840'},
-         {215024476528: '2132580'}, {215024723940: '2363172'}, {215023171402: '1488741'},
-         {215023163657: '1486018'}, {215024666376: '2306678'}, {215023816257: '1731755'},
-         {215024255564: '1801285'}]
-    result2 = [{215024596347: '2238780'}, {215023108592: '1641555'}, {215024255565: '1801285'}, {215024255565: '1567371'},
-     {215024255565: '1579493'}, {215024596618: '2246341'}, {215024278659: '1974140'}, {215023033246: '1429847'},
-     {215023033246: '2053006'}, {215022109166: '1013844'}, {215023513814: '2074801'}, {215024643100: '2283244'},
-     {215024663167: '2306758'}, {215024695388: '2324114'}, {215023108616: '1428513'}, {215024278614: '1974138'},
-     {215024218432: '1930372'}, {215024218432: '1930373'}, {215024772581: '2406132'}, {215024372307: '2006538'},
-     {215024372307: '2006537'}, {215022422844: '1164840'}, {215024476528: '2132580'}, {215024723940: '2363172'},
-     {215023163657: '1486018'}, {215024666376: '2306678'}, {215024557759: '2197891'}, {215023816257: '1731755'},
-     {215023807450: '1856268'}, {215024502011: '2155759'}, {215024255564: '1801285'}, {215024255564: '1567371'}]
-
-    tot_rst = result1 + result2
-    print(tot_rst)
-    print(set(tot_rst))
-    print({215023807450: '1856268'} == {215023807450: '1856268'})
-
-    # match.search_img_download()
-
-    # file_list1 = os.listdir(const.IMG_1300k_DIR)
-    # file_list2 = os.listdir(const.IMG_10x10_DIR)
-    # # print(file_list1)
-    # for file in file_list1:
-    #     file_name = splitext(file)[0]
-    #     ten_item_id = 0
-
-        # if file_name.startswith('img_전체_215022109166'):
-        #     print()
-    #
-    #
-    # def tmp_fn(obj):
-    #     return obj['cnt'] == 0
-    # result = list(filter(tmp_fn, match.search_result))
-    # for item in match.search_result:
-    #     print(item)
-    # print(len(match.search_result))
-    # print(len(result))
+    match.run('전체')
+    print(match.matched_items)
 
 
 
