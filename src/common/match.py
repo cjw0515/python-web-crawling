@@ -8,16 +8,20 @@ from bestitem_1300k import BestItem
 from search_result import SearchResultItem
 import random
 import os
+import re
 from os.path import splitext
 
 
 class MatchItems:
 
-    def __init__(self):
+    def __init__(self, img_similarity:float = 0.9, text_similarity:float = 0.9):
         self.items = []
         self.ten_items = []
         self.search_result = []
         self.matched_items = set()
+        self.IMG_SIMILARITY = img_similarity
+        self.TEXT_SIMILARITY = text_similarity
+
         # self.keyword_cont_list = []
 
     def set_items(self, sql, db):
@@ -169,8 +173,7 @@ class MatchItems:
 
         self.set_matched_items(matched_items)
 
-    @staticmethod
-    def match_imgs(img_arr1: list, img_arr2: list, itemid: int, category: str):
+    def match_imgs(self, img_arr1: list, img_arr2: list, itemid: int, category: str):
         result_arr = []
         name_format = "img_{category}_{itemid}".format(category=category, itemid=itemid)
         for item_img in img_arr1:
@@ -180,7 +183,7 @@ class MatchItems:
                         # 비교
                         result = sim(os.path.join(const.IMG_1300k_DIR, item_img)
                                      , os.path.join(const.IMG_10x10_DIR, ten_img))
-                        if result > 0.9:
+                        if result > self.IMG_SIMILARITY:
                             result_arr.append((int(splitext(item_img)[0].split("_")[2]), ten_img.split("_")[3]))
 
         return result_arr
@@ -192,7 +195,7 @@ class MatchItems:
             if result['cnt'] < 1:
                 continue
             for item in result['result_items']:
-                if string_match(result['item_name'], item.ItemName) > 0.9:
+                if string_match(result['item_name'], item.ItemName) > self.TEXT_SIMILARITY:
                     result_arr.append((result['itemid'], item.itemCode))
 
         self.set_matched_items(result_arr)
@@ -212,10 +215,8 @@ class MatchItems:
                 if len(items) > 0:
                     if items[0][0] != None:
                         tmp_itemid = str(items[0][0]) + "," + str(ten_code)
-                        print(tmp_itemid)
                     else:
                         tmp_itemid = str(ten_code)
-                        print(tmp_itemid)
 
                     db.execute(sql="""
                                     update best100_1300k
@@ -252,8 +253,8 @@ class MatchItems:
                                     , max=30)
 
         # 이미지 다운로드
-        # self.item_img_download()
-        # self.search_img_download()
+        self.item_img_download()
+        self.search_img_download()
 
         # 아이템 매칭
         print("이미지 매칭중...")
@@ -262,14 +263,17 @@ class MatchItems:
         self.match_item_names()
 
         # 매치상품 업데이트
-        # self.update_matched_data(category)
+        print("상품 업데이트...")
+        self.update_matched_data(category)
         return True
 
 if __name__ == "__main__":
-    match = MatchItems()
-    match.run('전체')
-    print(match.matched_items)
-
+    # print(string_match('[무료배송] 바디럽 마약빈백', '바디럽 마약빈백'))
+    teststring = '[무료배송] BOXER BRIEFS-LOW RISE BASIC PACK [ 3SET ]'
+    # result = re.search('무료배송', teststring)
+    # result = re.search('\\[(.*?)\\]', teststring)
+    result = re.sub('\\[(.*?)\\]', '', teststring).strip()
+    print(result)
 
 
 
