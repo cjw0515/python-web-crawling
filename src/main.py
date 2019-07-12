@@ -3,9 +3,6 @@ from match import MatchItems
 from constant import URL_1300K_BEST
 import time
 import constant
-import os
-import sqlite_db
-import common as com
 
 def main():
     # 크롤링
@@ -14,7 +11,8 @@ def main():
     categories = crawler_1300k.get_category(driver)
 
     for category_key in categories.keys():
-        html = crawler_1300k.get_html(driver, '{url}?f_cno1={key}'.format(url=URL_1300K_BEST, key=categories[category_key]))
+        html = crawler_1300k.get_html(driver
+                                      , '{url}?f_cno1={key}'.format(url=URL_1300K_BEST, key=categories[category_key]))
         data = crawler_1300k.crawl_1300k_best(html, category_key)
         crawler_1300k.insert_data(db_path=constant.DB_1300K_BEST_PATH, data=data)
 
@@ -23,8 +21,7 @@ def main():
     print(end_time)
 
     # 아이템 매칭
-
-    match = MatchItems()
+    match = MatchItems(img_similarity=0.85, text_similarity=0.85)
     match.run('전체')
     print(match.matched_items)
 
