@@ -115,7 +115,7 @@ def crawl_1300k_best(html, category_name=None):
             url = parse.urlparse(item.find('a', href=re.compile('goodsDetail.html?')).attrs['href'])
             item_code = parse.parse_qs(url.query)['f_goodsno'][0]
             brand = item('a', {'class': 'a_bname'})[0].text
-            item_name = item('a', {'class': 'a_gname'})[0].text
+            item_name = re.sub('\\[(.*?)\\]', '', item('a', {'class': 'a_gname'})[0].text).strip()
             tmp_price_dic = get_item_price(item('span', {'class': 'gprice'})[0])
             price = tmp_price_dic['Price']
             sale_price = tmp_price_dic['SalePrice']
