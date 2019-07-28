@@ -3,6 +3,7 @@ from match import MatchItems
 from constant import URL_1300K_BEST
 import time
 import constant
+# from mysql_db import
 
 def main():
     # 크롤링
@@ -21,9 +22,10 @@ def main():
     print(end_time)
 
     # 아이템 매칭
-    match = MatchItems(img_similarity=0.85, text_similarity=0.85)
+    """
+    match = MatchItems(img_similarity=0.9, text_similarity=0.85)
     match.run('전체')
     print(match.matched_items)
-
+    """
 if __name__ == "__main__":
     main()
