@@ -77,7 +77,7 @@ def insert_data(db_path, data):
         db.execute_many(insert_table_sql, data)
 
 
-def crawl_1300k_best(html, category_name=None):
+def crawl_1300k_best(html, driver, category_name=None):
 
     log = logger.logger('crawl_1300k_best')
     soup = BeautifulSoup(html, 'html.parser')
@@ -122,12 +122,12 @@ def crawl_1300k_best(html, category_name=None):
             num_of_review = None
             num_of_like = None
     ######################################
-            # item_detail_url = 'http://www.1300k.com/shop/goodsDetail.html?f_goodsno=' + item_code
-            # tmp_html = get_html(item_detail_url)
-            #
-            # soup = BeautifulSoup(tmp_html, 'html.parser')
-            # num_of_like = common.get_integer(soup.select("#idGoodsFavorCnt")[0].text)
-            # num_of_review = common.get_integer(soup.select("#gdt_nav_desc .txt_ps")[0]('em')[0].text)
+            item_detail_url = 'http://www.1300k.com/shop/goodsDetail.html?f_goodsno=' + item_code
+            tmp_html = get_html(driver, item_detail_url)
+
+            soup = BeautifulSoup(tmp_html, 'html.parser')
+            num_of_like = common.get_integer(soup.select("#idGoodsFavorCnt")[0].text)
+            num_of_review = common.get_integer(soup.select("#gdt_nav_desc .txt_ps")[0]('em')[0].text)
     ######################################
 
             tmp_obj = (

@@ -10,11 +10,12 @@ import random
 import os
 import re
 from os.path import splitext
+from mysql_db import MysqlDatabase
 
 
 class MatchItems:
 
-    def __init__(self, img_similarity:float = 0.9, text_similarity:float = 0.9):
+    def __init__(self, img_similarity: float = 0.9, text_similarity: float = 0.9):
         self.items = []
         self.ten_items = []
         self.search_result = []
@@ -27,6 +28,26 @@ class MatchItems:
     def set_items(self, sql, db):
         db = sqlite_db.SqliteDatabase(db)
         items = db.query(sql)
+
+        for item in items:
+            tmp_obj: BestItem = BestItem(
+                category=item[1],
+                rank=item[2],
+                imageURL=item[3],
+                itemCode=item[4],
+                brand=item[5],
+                itemName=item[6],
+                price=item[7],
+                salePrice=item[8],
+                numOfReview=item[9],
+                numOfLike=item[10]
+            )
+            self.items.append(tmp_obj)
+
+    def set_items2(self, category):
+        my_db = MysqlDatabase()
+        my_db.create_1300k_table()
+        items = my_db.select_1300k_data(category)
 
         for item in items:
             tmp_obj: BestItem = BestItem(
@@ -225,14 +246,39 @@ class MatchItems:
                                        and ItemCode = ?
                                     """, params=(tmp_itemid, category, item_code))
 
+    def update_matched_data2(self, category):
+
+        my_db = MysqlDatabase()
+        my_db.create_1300k_table()
+
+        for item in self.matched_items:
+            item_code = item[0]
+            ten_code = item[1]
+            items = my_db.select_1300k_mached_data(category, item_code)
+            print(items)
+
+            if len(items) > 0:
+                if items[0][0] != None:
+                    tmp_itemid = str(items[0][0]) + "," + str(ten_code)
+                else:
+                    tmp_itemid = str(ten_code)
+
+                # 업데이트
+                my_db.update_1300k_matched_data(category, item_code, tmp_itemid)
+
     def run(self, category):
         # 아이템 셋
         print("상품 셋...")
-        self.set_items(sql="""
-               select *
-             from best100_1300k
-            where category = "{category}"
-               """.format(category=category), db=const.DB_1300K_BEST_PATH)
+        # sqlite
+        #
+        # self.set_items(sql="""
+        #        select *
+        #      from best100_1300k
+        #     where category = "{category}"
+        #        """.format(category=category), db=const.DB_1300K_BEST_PATH)
+
+        # mysql
+        self.set_items2(category)
 
         # 아이템 검색 결과 셋
         print("검색중...")
@@ -264,7 +310,7 @@ class MatchItems:
 
         # 매치상품 업데이트
         print("상품 업데이트...")
-        self.update_matched_data(category)
+        self.update_matched_data2(category)
         return True
 
 if __name__ == "__main__":
