@@ -3,10 +3,12 @@ from match import MatchItems
 from constant import URL_1300K_BEST
 import time
 import constant
+import os
+import common
 from mysql_db import MysqlDatabase
 
 def main():
-    # db초기화
+    # # db초기화
     # my_db = MysqlDatabase()
     # my_db.create_1300k_table()
     #
@@ -27,10 +29,15 @@ def main():
     # end_time = time.time() - start
     # print(end_time)
 
+    driver = crawler_1300k.get_driver()
+    categories = crawler_1300k.get_category(driver)
     # 아이템 매칭
+    for categiry_name in categories.keys():
+        match = MatchItems(img_similarity=0.9, text_similarity=0.85)
+        match.run(categiry_name.replace('/', '_'))
+        common.remove_all_files(constant.IMG_1300k_DIR)
+        common.remove_all_files(constant.IMG_10x10_DIR)
 
-    match = MatchItems(img_similarity=0.9, text_similarity=0.85)
-    match.run('전체')
 
 if __name__ == "__main__":
     main()

@@ -2,6 +2,7 @@ import requests
 import textdistance
 import time
 import sys
+import os
 from constant import TEM_SEARCH_API
 
 
@@ -32,3 +33,10 @@ class Waiting:
 
 def string_match(str1, str2):
     return textdistance.jaro.normalized_similarity(str1, str2)
+
+
+def remove_all_files(path):
+    if os.path.exists(path):
+        for file in os.scandir(path):
+            os.remove(file.path)
+
