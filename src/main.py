@@ -34,10 +34,10 @@ def main():
     # 아이템 매칭
     for categiry_name in categories.keys():
         match = MatchItems(img_similarity=0.9, text_similarity=0.85)
-        match.run(categiry_name.replace('/', '_'))
+        match.run(categiry_name.replace('/', '-'))
         common.remove_all_files(constant.IMG_1300k_DIR)
         common.remove_all_files(constant.IMG_10x10_DIR)
-
+    driver.quit()
 
 if __name__ == "__main__":
     main()

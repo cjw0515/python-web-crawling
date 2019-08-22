@@ -217,7 +217,7 @@ class MatchItems:
                 continue
             for item in result['result_items']:
                 if string_match(result['item_name'], item.ItemName) > self.TEXT_SIMILARITY:
-                    result_arr.append((result['itemid'], item.itemCode))
+                    result_arr.append((int(result['itemid']), item.itemCode))
 
         self.set_matched_items(result_arr)
 
@@ -307,6 +307,8 @@ class MatchItems:
         self.match_items()
         print("아이템 이름 매칭중...")
         self.match_item_names()
+
+        print(self.matched_items)
 
         # 매치상품 업데이트
         print("상품 업데이트...")
